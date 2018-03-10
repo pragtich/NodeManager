@@ -115,7 +115,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
  */
 
 // General settings
-#define SKETCH_NAME "NodeManager"
+#define SKETCH_NAME "SleepingDoor"
 #define SKETCH_VERSION "1.0"
 #define MY_DEBUG
 //#define MY_NODE_ID 99
@@ -176,7 +176,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
 #define MY_SPLASH_SCREEN_DISABLED
 //#define MY_DISABLE_RAM_ROUTING_TABLE_FEATURE
-//#define MY_SIGNAL_REPORT_ENABLED
+#define MY_SIGNAL_REPORT_ENABLED
 
 // Optimizations when running on 2032 Coin Cell. Also set node.setSleepBetweenSend(500) and run the board at 1Mhz
 //#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
@@ -302,9 +302,9 @@ NodeManager node;
  */
 
 // built-in sensors
-//SensorBattery battery(node);
+SensorBattery battery(node);
 //SensorConfiguration configuration(node);
-//SensorSignal signal(node);
+SensorSignal signal(node);
 //PowerManager power(5,6);
 
 // Attached sensors
@@ -372,12 +372,12 @@ void before() {
   */
   // report measures of every attached sensors every 10 seconds
   //node.setReportIntervalSeconds(10);
-  door.setReportIntervalSeconds(20);
+  node.setReportIntervalMinutes(10);
   // report measures of every attached sensors every 10 minutes
   //node.setReportIntervalMinutes(10);
   // set the node to sleep in 5 minutes cycles
-  //node.setSleepMinutes(5);
-  node.setSleepSeconds(10);
+  node.setSleepMinutes(10);
+  //node.setSleepSeconds(60);
   // report battery level every 10 minutes
   //battery.setReportIntervalMinutes(10);
   // set an offset to -1 to a thermistor sensor
