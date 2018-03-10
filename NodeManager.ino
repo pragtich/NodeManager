@@ -117,11 +117,11 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 // General settings
 #define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
-//#define MY_DEBUG
+#define MY_DEBUG
 //#define MY_NODE_ID 99
 
 // NRF24 radio settings
-#define MY_RADIO_NRF24
+//#define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 125
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
@@ -129,10 +129,10 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define MY_RF24_DATARATE RF24_250KBPS
 
 // RFM69 radio settings
-//#define MY_RADIO_RFM69
-//#define MY_RFM69_FREQUENCY RFM69_433MHZ
-//#define MY_IS_RFM69HW
-//#define MY_RFM69_NEW_DRIVER
+#define MY_RADIO_RFM69
+#define MY_RFM69_FREQUENCY RFM69_868MHZ
+#define MY_IS_RFM69HW
+#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
 //#define MY_RFM69_NETWORKID 100
 //#define MY_DEBUG_VERBOSE_RFM69
@@ -244,7 +244,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
 //#define USE_SHT21
-//#define USE_INTERRUPT
+#define USE_INTERRUPT
 //#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
@@ -324,7 +324,7 @@ NodeManager node;
 //SensorSHT21 sht21(node);
 //SensorHTU21D htu21(node);
 //SensorInterrupt interrupt(node,3);
-//SensorDoor door(node,3);
+SensorDoor door(node,3);
 //SensorMotion motion(node,3);
 //SensorDs18b20 ds18b20(node,6);
 //SensorBH1750 bh1750(node);
@@ -371,11 +371,13 @@ void before() {
   * Configure your sensors below
   */
   // report measures of every attached sensors every 10 seconds
-  //node.setReportIntervalSeconds(10);
+  node.setReportIntervalSeconds(10);
+  door.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
   //node.setReportIntervalMinutes(10);
   // set the node to sleep in 5 minutes cycles
   //node.setSleepMinutes(5);
+  node.setSleepSeconds(10);
   // report battery level every 10 minutes
   //battery.setReportIntervalMinutes(10);
   // set an offset to -1 to a thermistor sensor

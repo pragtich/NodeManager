@@ -1583,11 +1583,24 @@ void SensorInterrupt::onSetup() {
   // set the interrupt pin so it will be called only when waking up from that interrupt
   setInterrupt(_pin,_mode,_initial);
   // report immediately
-  _report_timer->unset();
+  //_report_timer->unset();
 }
 
 // what to do during loop
 void SensorInterrupt::onLoop(Child* child) {
+    // read the value
+  int value = digitalRead(_pin);
+  #if FEATURE_DEBUG == ON
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
+    Serial.print(F(" P="));
+    Serial.print(_pin);
+    Serial.print(F(" V="));
+    Serial.println(value);
+  #endif
+  // store the value
+  ((ChildInt*)child)->setValueInt(value);
 }
 
 // what to do as the main task when receiving a message
