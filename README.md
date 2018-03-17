@@ -4,7 +4,7 @@ Nodemanager by default does not send regular updates of interrupt-driven sensors
 
 Since the merging of [PR 312](https://github.com/mysensors/NodeManager/pull/312), which introduces `FEATURE_HOOKING`, this is possible.
 
-This branch shows an example of this approach.
+This branch [shows an example of this approach](https://github.com/pragtich/NodeManager/blob/report_recv2/pio/src/MyNode.ino).
 
 ## Original documentation below:
 
