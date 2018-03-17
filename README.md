@@ -1,3 +1,13 @@
+## Forked NodeManager 
+
+Nodemanager by default does not send regular updates of interrupt-driven sensors. In case one does not want to rely on the successful transmission of each and every state change event, one may want to have the current status sent on a certain interval, regardless of the value.
+
+Since the merging of [PR 312](https://github.com/mysensors/NodeManager/pull/312), which introduces `FEATURE_HOOKING`, this is possible.
+
+This branch shows an example of this approach.
+
+## Original documentation below:
+
 NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
 Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
 NodeManager will take care of importing the required library, presenting the sensor to the gateway/controller, executing periodically the main function of the sensor 
