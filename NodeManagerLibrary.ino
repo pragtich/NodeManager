@@ -152,6 +152,10 @@ bool Timer::isOver() {
   return false;
 }
 
+void Timer::expire() {
+  _elapsed = _target;
+}
+
 // return true if the timer is running
 bool Timer::isRunning() {
   if (! isConfigured()) return false;
@@ -589,7 +593,7 @@ void Sensor::setup() {
 // call the sensor-specific implementation of loop
 void Sensor::loop(MyMessage* message) {
   // update the timers if within a loop cycle
-  Serial.print(F("--"));
+  Serial.print(F("\n--"));
   Serial.print(_name);
   if (message == nullptr) {
     Serial.print(F("."));
@@ -658,6 +662,7 @@ void Sensor::loop(MyMessage* message) {
 #endif
   // if called from loop(), restart the report timer if over
   if (message == nullptr && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
+  
   Serial.println(F("--"));
 }
 
@@ -716,6 +721,13 @@ void Sensor::setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message)
   _receive_hook = function;
 }
 #endif
+
+void Sensor::expire()
+{
+  _report_timer->expire();
+}
+
+
 
 // virtual functions
 void Sensor::onBefore() {}
@@ -1589,6 +1601,7 @@ void SensorInterrupt::setThreshold(int value) {
   _threshold = value;      
 }
 #endif
+
 
 
 // what to do during setup

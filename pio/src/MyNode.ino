@@ -386,6 +386,10 @@ void DoorSetup(Sensor* sensor){
   sensor->setReportIntervalSeconds(20);
 }
 
+void DoorInterrupt(Sensor* sensor){
+  sensor->expire();
+}
+
 // before
 void before() {
   // setup the serial port baud rate
@@ -416,6 +420,7 @@ void before() {
 
   door.setSetupHook(DoorSetup);
   door.setPreLoopHook(DoorLoop);
+  door.setInterruptHook(DoorInterrupt);
   /*
   * Configure your sensors above
   */

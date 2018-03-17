@@ -369,6 +369,8 @@ class Timer {
     bool isFirstRun();
     // return the current elapsed time
     float getElapsed();
+    // cause timer to expire
+    void expire();
    private:
     NodeManager* _node;
     int _target = 0;
@@ -580,6 +582,8 @@ class Sensor {
 #if FEATURE_RECEIVE == ON
     void receive(MyMessage* message);
 #endif
+    void expire();
+
     // abstract functions, subclasses need to implement
     virtual void onBefore();
     virtual void onSetup();
