@@ -601,6 +601,7 @@ void Sensor::loop(MyMessage* message) {
       _report_timer->update();
       // if it is not the time yet to report a new measure, just return (unless it is the first time)
       if (! _report_timer->isOver() && ! first_run) return;
+    }
   }
 #if FEATURE_HOOKING == ON
   // if a hook function is defined, call it
