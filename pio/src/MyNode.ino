@@ -360,6 +360,7 @@ SensorDoor door(node,3);
  * Main Sketch
  */
 
+#define DOOR_SECONDS (20)
 
 void DoorLoop(Sensor *sensor) {
   // read the value
@@ -383,7 +384,7 @@ void DoorLoop(Sensor *sensor) {
 
 
 void DoorSetup(Sensor* sensor){
-  sensor->setReportIntervalSeconds(20);
+  sensor->setReportIntervalSeconds(DOOR_SECONDS);
 }
 
 void DoorInterrupt(Sensor* sensor){
@@ -393,7 +394,7 @@ void DoorInterrupt(Sensor* sensor){
   #endif
   child->sendValue();
   // Reset report timer
-  sensor->setReportIntervalSeconds(20);
+  sensor->setReportIntervalSeconds(DOOR_SECONDS);
 }
 
 // before
@@ -408,7 +409,6 @@ void before() {
   */
   // report measures of every attached sensors every 10 seconds
   node.setReportIntervalSeconds(60);
-  door.setReportIntervalSeconds(20);
   // report measures of every attached sensors every 10 minutes
   //node.setReportIntervalMinutes(10);
   // set the node to sleep in 5 minutes cycles
