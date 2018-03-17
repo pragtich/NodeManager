@@ -589,11 +589,6 @@ void Sensor::setup() {
 // call the sensor-specific implementation of loop
 void Sensor::loop(MyMessage* message) {
   // update the timers if within a loop cycle
-<<<<<<< HEAD
-=======
-  Serial.print(F("--"));
-  Serial.print(_name);
->>>>>>> parent of cea67f9... Add timer expiration to get data out after interrupt
   if (message == nullptr) {
     if (_report_timer->isRunning()) {
       // keep track if it is the first time
