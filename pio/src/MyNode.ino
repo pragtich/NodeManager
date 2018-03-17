@@ -387,7 +387,13 @@ void DoorSetup(Sensor* sensor){
 }
 
 void DoorInterrupt(Sensor* sensor){
-  sensor->expire();
+  Child* child = sensor->children.get(1);
+  #if FEATURE_DEBUG == ON
+    Serial.println(F("Sending door value"));
+  #endif
+  child->sendValue();
+  // Reset report timer
+  sensor->setReportIntervalSeconds(20);
 }
 
 // before
