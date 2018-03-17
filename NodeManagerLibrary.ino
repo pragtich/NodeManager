@@ -593,27 +593,14 @@ void Sensor::setup() {
 // call the sensor-specific implementation of loop
 void Sensor::loop(MyMessage* message) {
   // update the timers if within a loop cycle
-  Serial.print(F("\n--"));
-  Serial.print(_name);
   if (message == nullptr) {
-    Serial.print(F("."));
     if (_report_timer->isRunning()) {
-          Serial.print(F("t"));
       // keep track if it is the first time
       bool first_run = _report_timer->isFirstRun();
-      if (first_run)     Serial.print(F("f"));
       // update the timer
       _report_timer->update();
       // if it is not the time yet to report a new measure, just return (unless it is the first time)
-      if (! _report_timer->isOver() && ! first_run) {
-	Serial.print(F("x"));
-	return;
-      } else {
-	Serial.print(F("."));
-      }
-    } else {
-      Serial.print(F("!"));
-    }
+      if (! _report_timer->isOver() && ! first_run) return;
   }
 #if FEATURE_HOOKING == ON
   // if a hook function is defined, call it
@@ -662,8 +649,6 @@ void Sensor::loop(MyMessage* message) {
 #endif
   // if called from loop(), restart the report timer if over
   if (message == nullptr && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
-  
-  Serial.println(F("--"));
 }
 
 #if FEATURE_INTERRUPTS == ON
