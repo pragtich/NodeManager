@@ -5,3 +5,4 @@
 *.tmp
 *.part
 *.rsls
+pio/
