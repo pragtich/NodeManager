@@ -417,6 +417,7 @@ class Child {
     int float_precision;
     const char* description = "";
     virtual void sendValue();
+    virtual void sendLastValue();
     virtual void printOn(Print& p);
 #if FEATURE_CONDITIONAL_REPORT == ON
     Timer* force_update_timer;
@@ -435,15 +436,16 @@ class ChildInt: public Child {
     void setValueInt(int value);
     int getValueInt();
     void sendValue();
+    void sendLastValue();
     void printOn(Print& p);
 #if FEATURE_CONDITIONAL_REPORT == ON
     bool isNewValue();
 #endif
   private:
     int _value;
-#if FEATURE_CONDITIONAL_REPORT == ON
+    //#if FEATURE_CONDITIONAL_REPORT == ON
     int _last_value;
-#endif
+    //#endif
     int _total = 0;
 };
 
@@ -453,15 +455,17 @@ class ChildFloat: public Child {
     void setValueFloat(float value);
     float getValueFloat();
     void sendValue();
+    void sendLastValue();
+    
     void printOn(Print& p);
 #if FEATURE_CONDITIONAL_REPORT == ON
     bool isNewValue();
 #endif
   private:
     float _value;
-#if FEATURE_CONDITIONAL_REPORT == ON
+    //#if FEATURE_CONDITIONAL_REPORT == ON
     float _last_value;
-#endif
+    //#endif
     float _total = 0;
 };
 
@@ -471,15 +475,16 @@ class ChildDouble: public Child {
     void setValueDouble(double value);
     double getValueDouble();
     void sendValue();
+    void sendLastValue();
     void printOn(Print& p);
 #if FEATURE_CONDITIONAL_REPORT == ON
     bool isNewValue();
 #endif
   private:
     double _value;
-#if FEATURE_CONDITIONAL_REPORT == ON
+    //#if FEATURE_CONDITIONAL_REPORT == ON
     double _last_value;
-#endif
+    //#endif
     double _total = 0;
 };
 
@@ -489,15 +494,16 @@ class ChildString: public Child {
     void setValueString(const char* value);
     const char* getValueString();
     void sendValue();
+    void sendLastValue();
     void printOn(Print& p);
 #if FEATURE_CONDITIONAL_REPORT == ON
     bool isNewValue();
 #endif
   private:
     const char* _value = "";
-#if FEATURE_CONDITIONAL_REPORT == ON
+    //#if FEATURE_CONDITIONAL_REPORT == ON
     const char* _last_value = "";
-#endif
+    //#endif
 };
 
 /***************************************

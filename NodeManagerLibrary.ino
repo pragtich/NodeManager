@@ -251,6 +251,11 @@ Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, cons
 // set a value, implemented by the subclasses
 void Child::sendValue() {
 }
+// set a value, implemented by the subclasses
+void Child::sendLastValue() {
+  Serial.println(F("Child senslastvalue"));
+}
+
 // Print the child's value (variable type depending on the child class) to the given output
 void Child::printOn(Print& p) {
 }
@@ -288,11 +293,19 @@ void ChildInt::sendValue() {
   if (_value < min_threshold || _value > max_threshold) return;
 #endif
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_CONDITIONAL_REPORT == ON
+  //#if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
-#endif
+  //#endif
   _total = 0;
   _samples = 0;
+}
+
+// send the last value back to the controller
+void ChildInt::sendLastValue() {
+  Serial.println(F("Sending last Int"));
+
+  Serial.println(F("Sending last int"));
+  _sensor->_node->sendMessage(child_id,type,_last_value);
 }
 
 // Print the child's value (variable type depending on the child class) to the given output
@@ -336,12 +349,20 @@ void ChildFloat::sendValue() {
   if (_value < min_threshold || _value > max_threshold) return;
 #endif
   _sensor->_node->sendMessage(child_id,type,_value,float_precision);
-#if FEATURE_CONDITIONAL_REPORT == ON
+  //#if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
-#endif
+  //#endif
   _total = 0;
   _samples = 0;
 }
+
+// send the last value back to the controller
+void ChildFloat::sendLastValue() {
+  Serial.println(F("Sending last Float"));
+
+  _sensor->_node->sendMessage(child_id,type,_last_value,float_precision);
+}
+
 
 // Print the child's value (variable type depending on the child class) to the given output
 void ChildFloat::printOn(Print& p) {
@@ -384,12 +405,19 @@ void ChildDouble::sendValue() {
   if (_value < min_threshold || _value > max_threshold) return;
 #endif
   _sensor->_node->sendMessage(child_id,type,_value,float_precision);
-#if FEATURE_CONDITIONAL_REPORT == ON
+  //#if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
-#endif
+  //#endif
   _total = 0;
   _samples = 0;
 }
+
+// send the lastvalue back to the controller
+void ChildDouble::sendLastValue() {
+  _sensor->_node->sendMessage(child_id,type,_last_value,float_precision);
+}
+
+
 
 // Print the child's value (variable type depending on the child class) to the given output
 void ChildDouble::printOn(Print& p) {
@@ -424,11 +452,18 @@ const char* ChildString::getValueString() {
 // send the value back to the controller
 void ChildString::sendValue() {
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_CONDITIONAL_REPORT == ON
+  //#if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
-#endif
+  //#endif
   _value = "";
 }
+
+// send the last value back to the controller
+void ChildString::sendLastValue() {
+  Serial.println(F("Sending last String"));
+  _sensor->_node->sendMessage(child_id,type,_last_value);
+}
+
 
 // Print the child's value (variable type depending on the child class) to the given output
 void ChildString::printOn(Print& p) {
@@ -4528,6 +4563,29 @@ void NodeManager::presentation() {
   _sleepBetweenSend();
   _sleepBetweenSend();
   _sleepBetweenSend();
+
+  // Send initial values for each sensor
+  for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
+    Sensor* sensor = *itr;
+    for (List<Child*>::iterator itr2 = sensor->children.begin(); itr2 != sensor->children.end(); ++itr2) {
+      Child* child = *itr2;
+      Serial.print(F("Sending sensor "));
+      Serial.println(child->description);
+      child->sendLastValue();
+      _sleepBetweenSend();
+    }
+    
+    _sleepBetweenSend();
+  }
+  #if FEATURE_DEBUG == ON
+    Serial.println(F("READY"));
+    Serial.println("");
+  #endif
+  // wait a bit before leaving this function
+  _sleepBetweenSend();
+  _sleepBetweenSend();
+  _sleepBetweenSend();
+  
 }
 
 
