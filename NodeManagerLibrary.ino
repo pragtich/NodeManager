@@ -273,6 +273,14 @@ void ChildInt::setValueInt(int value) {
   _total = _total + value;
   _samples++;
   _value = (int) (_total / _samples);
+    #if FEATURE_DEBUG == ON
+    Serial.print(description);
+    Serial.print(F(" V="));
+    Serial.print(_value);
+    Serial.print(F(" T="));
+    Serial.println(_total);
+  #endif
+
 }
 
 // return the value
@@ -812,6 +820,12 @@ void SensorSignal::onLoop(Child* child) {
     Serial.println(value);
   #endif
   ((ChildInt*)child)->setValueInt(value);
+  #if FEATURE_DEBUG == ON
+    Serial.print(_name);
+    Serial.print(F(" Child="));
+    Serial.println(((ChildInt*)child)->getValueInt());
+  #endif
+
 }
 
 // what to do as the main task when receiving a message
@@ -4954,7 +4968,7 @@ void NodeManager::_onInterrupt_2() {
 // send a message by providing the source child, type of the message and value
 void NodeManager::sendMessage(int child_id, int type, int value) {
   _message.clear();
-  _message.set((uint32_t) value);
+  _message.set((int32_t) value);
   _sendMessage(child_id,type);
 }
 void NodeManager::sendMessage(int child_id, int type, float value, int precision) {
