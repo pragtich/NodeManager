@@ -8,7 +8,7 @@
 #include <Arduino.h>
 
 // define NodeManager version
-#define VERSION "1.7-dev"
+#define VERSION "1.8-dev"
 
 /***********************************
    Constants
@@ -50,7 +50,6 @@
 #if defined (MYBOARDNRF5)
   #define CHIP_NRF5
 #endif
-
 #if !defined(CHIP_ESP8266) && !defined(CHIP_STM32) && !defined(CHIP_NRF5)
   #define CHIP_AVR
 #endif
@@ -178,7 +177,7 @@
 #ifdef USE_SONOFF
   #include <Bounce2.h>
 #endif
-#ifdef USE_BMP085
+#ifdef USE_BMP085_180
   #include <Wire.h>
   #include <Adafruit_BMP085.h>
 #endif
@@ -320,7 +319,7 @@ public:
   inline iterator begin() { return _internalArray; }
   inline iterator end() { return _internalArray + _endPosition; }
   inline bool empty() { return (_endPosition == 0); }
-  inline unsigned int size() { return _endPosition; }
+  inline int size() { return _endPosition; }
   void allocateBlocks(int alloc) {
     _allocBlocks = alloc;
     T* newArray = new T[_allocBlocks];
@@ -449,22 +448,50 @@ class Child {
   public:
     Child();
     Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-    int child_id;
-    int presentation = S_CUSTOM;
-    int type = V_CUSTOM;
-    int float_precision;
-    const char* description = "";
-    virtual void sendValue();
-    virtual void printOn(Print& p);
+    // set child id used to communicate with the gateway/controller
+    void setChildId(int value);
+    int getChildId();
+    // set sensor presentation (default: S_CUSTOM)
+    void setPresentation(int value);
+    int getPresentation();
+    // set sensor type (default: V_CUSTOM)
+    void setType(int value);
+    int getType();
+    // set how many decimal digits to use (default: 2 for ChildFloat, 4 for ChildDouble)
+    void setFloatPrecision(int value);
+    // set sensor description
+    void setDescription(const char* value);
+    const char* getDescription();
 #if FEATURE_CONDITIONAL_REPORT == ON
-    Timer* force_update_timer;
-    virtual bool isNewValue();
-    float min_threshold = FLT_MIN;
-    float max_threshold = FLT_MAX;
+    // force to send an update after the configured number of minutes
+    void setForceUpdateMinutes(int value);
+    // never report values below this threshold (default: FLT_MIN)
+    void setMinThreshold(float value);
+    // never report values above this threshold (default: FLT_MAX)
+    void setMaxThreshold(float value);
+    // do not report values if too close to the previous one (default: 0)
+    void setValueDelta(float value);
 #endif
+    // send the current value to the gateway
+    virtual void sendValue(bool force);
+    // print the current value on a LCD display
+    virtual void print(Print& device);
+    // reset all the counters
+    virtual void reset();
   protected:
     int _samples = 0;
     Sensor* _sensor;
+    int _child_id;
+    int _presentation = S_CUSTOM;
+    int _type = V_CUSTOM;
+    int _float_precision;
+    const char* _description = "";
+#if FEATURE_CONDITIONAL_REPORT == ON
+    Timer* _force_update_timer;
+    float _min_threshold = FLT_MIN;
+    float _max_threshold = FLT_MAX;
+    float _value_delta = 0;
+#endif
 };
 
 class ChildInt: public Child {
@@ -472,15 +499,13 @@ class ChildInt: public Child {
     ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueInt(int value);
     int getValueInt();
-    void sendValue();
-    void printOn(Print& p);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool isNewValue();
-#endif
+    void sendValue(bool force);
+    void print(Print& device);
+    void reset();
   private:
     int _value;
 #if FEATURE_CONDITIONAL_REPORT == ON
-    int _last_value;
+    int _last_value = -256;
 #endif
     int _total = 0;
 };
@@ -490,15 +515,13 @@ class ChildFloat: public Child {
     ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueFloat(float value);
     float getValueFloat();
-    void sendValue();
-    void printOn(Print& p);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool isNewValue();
-#endif
+    void sendValue(bool force);
+    void print(Print& device);
+    void reset();
   private:
     float _value;
 #if FEATURE_CONDITIONAL_REPORT == ON
-    float _last_value;
+    float _last_value = -256;
 #endif
     float _total = 0;
 };
@@ -508,15 +531,13 @@ class ChildDouble: public Child {
     ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueDouble(double value);
     double getValueDouble();
-    void sendValue();
-    void printOn(Print& p);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool isNewValue();
-#endif
+    void sendValue(bool force);
+    void print(Print& device);
+    void reset();
   private:
     double _value;
 #if FEATURE_CONDITIONAL_REPORT == ON
-    double _last_value;
+    double _last_value = -256;
 #endif
     double _total = 0;
 };
@@ -526,11 +547,9 @@ class ChildString: public Child {
     ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueString(const char* value);
     const char* getValueString();
-    void sendValue();
-    void printOn(Print& p);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool isNewValue();
-#endif
+    void sendValue(bool force);
+    void print(Print& device);
+    void reset();
   private:
     const char* _value = "";
 #if FEATURE_CONDITIONAL_REPORT == ON
@@ -555,12 +574,6 @@ class Sensor {
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    // [7] if true will report the measure only if different than the previous one (default: false)
-    void setTrackLastValue(bool value);
-    // [9] if track last value is enabled, force to send an update after the configured number of minutes
-    void setForceUpdateMinutes(int value);
-#endif
 #if FEATURE_POWER_MANAGER == ON
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -629,9 +642,6 @@ class Sensor {
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool _track_last_value = false;
-#endif
 #if FEATURE_INTERRUPTS == ON
     int _interrupt_pin = -1;
 #endif
@@ -863,8 +873,6 @@ class SensorDigitalInput: public Sensor {
 class SensorDigitalOutput: public Sensor {
   public:
     SensorDigitalOutput(NodeManager& node_manager, int pin, int child_id = -255);
-    // [103] define which value to set to the output when set to on (default: HIGH)
-    void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
     // [105] automatically turn the output off after the given number of minutes
@@ -875,7 +883,11 @@ class SensorDigitalOutput: public Sensor {
     void setWaitAfterSet(int value);
     // [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
     void setPulseWidth(int value);
-    // manually switch the output to the provided value
+    // [109] Invert the value to write. E.g. if ON is received, write LOW (default: false) 
+    void setInvertValueToWrite(bool value);
+    // [110] for a 2-pins latching relay, set the pin which turns the relay off (default: -1)
+    void setPinOff(int value);
+    // manually switch the output to the provided status (ON or OFF)
     void setStatus(int value);
     // toggle the status
     void toggleStatus();
@@ -885,16 +897,15 @@ class SensorDigitalOutput: public Sensor {
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
-    int _on_value = HIGH;
     int _status = OFF;
+    int _pin_off = -1;
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
     int _wait_after_set = 0;
     int _pulse_width = 0;
-    Timer* _safeguard_timer;
-    void _setupPin(Child* child, int pin);
-    virtual void _setStatus(int value);
-    int _getValueToWrite(int value);
+    bool _invert_value_to_write = false;
+    Timer* _safeguard_timer = new Timer(_node);
+    virtual void _switchOutput(int value);
 };
 
 /*
@@ -906,21 +917,19 @@ class SensorRelay: public SensorDigitalOutput {
 };
 
 /*
-   SensorLatchingRelay
+   SensorLatchingRelay1Pin
 */
-class SensorLatchingRelay: public SensorRelay {
+class SensorLatchingRelay1Pin: public SensorRelay {
   public:
-    SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id = -255);
-    // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
-    void setPinOff(int value);
-    // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
-    void setPinOn(int value);
-    // define what to do at each stage of the sketch
-    void onSetup();
-  protected:
-    int _pin_on;
-    int _pin_off;
-    void _setStatus(int value);
+    SensorLatchingRelay1Pin(NodeManager& node_manager, int pin, int child_id = -255);
+};
+
+/*
+   SensorLatchingRelay2Pins
+*/
+class SensorLatchingRelay2Pins: public SensorRelay {
+  public:
+    SensorLatchingRelay2Pins(NodeManager& node_manager, int pin_off, int pin_on, int child_id = -255);
 };
 #endif
 
@@ -990,13 +999,13 @@ class SensorInterrupt: public Sensor {
   public:
     SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
-    void setMode(int value);
-    // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
-    void setTriggerTime(int value);
-    // [104] Set initial value on the interrupt pin (default: HIGH)
-    void setInitial(int value);
-    // [105] Set active state (default: HIGH) 
-    void setActiveState(int value);
+    void setInterruptMode(int value);
+    // [103] milliseconds to wait/sleep after the interrupt before reporting (default: 0)
+    void setWaitAfterTrigger(int value);
+    // [104] Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
+    void setInitialValue(int value);
+    // [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
+    void setInvertValueToReport(bool value);
     // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
     void setArmed(bool value);
 #if FEATURE_TIME == ON
@@ -1009,10 +1018,10 @@ class SensorInterrupt: public Sensor {
     void onReceive(MyMessage* message);
     void onInterrupt();
   protected:
-    int _trigger_time = 0;
-    int _mode = CHANGE;
-    int _initial = HIGH;
-    int _active_state = HIGH;
+    int _wait_after_trigger = 0;
+    int _interrupt_mode = CHANGE;
+    int _initial_value = HIGH;
+    bool _invert_value_to_report = false;
     bool _armed = true;
 #if FEATURE_TIME == ON
     int _threshold = 1;
@@ -1035,7 +1044,6 @@ class SensorDoor: public SensorInterrupt {
 class SensorMotion: public SensorInterrupt {
   public:
     SensorMotion(NodeManager& node_manager, int pin, int child_id = -255);
-    void onSetup();
 };
 #endif
 /*
@@ -1102,7 +1110,7 @@ class SensorMLX90614: public Sensor {
  * SensorBosch
 */
 
-#if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
+#if defined(USE_BME280) || defined(USE_BMP085_180) || defined(USE_BMP280)
 class SensorBosch: public Sensor {
   public:
     SensorBosch(NodeManager& node_manager, int child_id = -255);
@@ -1110,9 +1118,9 @@ class SensorBosch: public Sensor {
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
     void onReceive(MyMessage* message);
-    uint8_t GetI2CAddress(uint8_t chip_id);
+    uint8_t detectI2CAddress(uint8_t chip_id);
   protected:
-    char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
+    const char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
     int _forecast_samples_count = 5;
     float* _forecast_samples;
     int _minute_count = 0;
@@ -1121,7 +1129,7 @@ class SensorBosch: public Sensor {
     float _dP_dt;
     bool _first_round = true;
     float _getLastPressureSamplesAverage();
-    char* _forecast(float pressure);
+    const char* _forecast(float pressure);
 };
 #endif
 
@@ -1143,7 +1151,7 @@ class SensorBME280: public SensorBosch {
 /*
    SensorBMP085
 */
-#ifdef USE_BMP085
+#ifdef USE_BMP085_180
 class SensorBMP085: public SensorBosch {
   public:
     SensorBMP085(NodeManager& node_manager, int child_id = -255);
@@ -1152,6 +1160,14 @@ class SensorBMP085: public SensorBosch {
     void onLoop(Child* child);
   protected:
     Adafruit_BMP085* _bm;
+};
+
+/*
+   SensorBMP180
+*/
+class SensorBMP180: public SensorBMP085 {
+  public:
+    SensorBMP180(NodeManager& node_manager, int child_id = -255);
 };
 #endif
 
@@ -1451,10 +1467,12 @@ class SensorPulseMeter: public Sensor {
     SensorPulseMeter(NodeManager& node_manager, int pin, int child_id = -255);
     // [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
     void setPulseFactor(float value);
-    // set initial value - internal pull up (default: HIGH)
+    // Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
     void setInitialValue(int value);
-    // set the interrupt mode to attach to (default: FALLING)
+    // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: FALLING)
     void setInterruptMode(int value);
+    // milliseconds to wait/sleep after the interrupt before reporting (default: 0)
+    void setWaitAfterTrigger(int value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -1466,6 +1484,7 @@ class SensorPulseMeter: public Sensor {
     float _pulse_factor;
     int _initial_value = HIGH;
     int _interrupt_mode = FALLING;
+    int _wait_after_trigger = 0;
     virtual void _reportTotal(Child* child);
 };
 
@@ -1606,7 +1625,7 @@ class DisplaySSD1306: public Display {
     uint8_t _i2caddress = 0x3c;
     int _fontsize = 1;
     int _caption_fontsize = 2;
-    uint8_t* _font = Adafruit5x7;
+    const uint8_t* _font = Adafruit5x7;
     uint8_t _contrast = -1;
 };
 #endif
