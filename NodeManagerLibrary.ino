@@ -5028,7 +5028,7 @@ void NodeManager::_onInterrupt_2() {
 // send a message by providing the source child, type of the message and value
 void NodeManager::sendMessage(int child_id, int type, int value) {
   _message.clear();
-  _message.set((int32_t) value);
+  _message.set(value);
   _sendMessage(child_id,type);
 }
 void NodeManager::sendMessage(int child_id, int type, float value, int precision) {
