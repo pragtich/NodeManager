@@ -318,7 +318,7 @@ void ChildInt::setValueInt(int value) {
   // averages the values
   _value = (int) (_total / _samples);
     #if FEATURE_DEBUG == ON
-    Serial.print(description);
+    Serial.print(getDescription());
     Serial.print(F(" V="));
     Serial.print(_value);
     Serial.print(F(" T="));
