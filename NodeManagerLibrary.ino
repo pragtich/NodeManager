@@ -322,7 +322,9 @@ void ChildInt::setValueInt(int value) {
     Serial.print(F(" V="));
     Serial.print(_value);
     Serial.print(F(" T="));
-    Serial.println(_total);
+    Serial.print(_total);
+    Serial.print(F(" n="));
+    Serial.println(_samples);
   #endif
 
 }
